@@ -76,7 +76,6 @@ class RtWave constructor(var bytes: ByteArray) {
             pi = $pi
             state = $state
             len = $len
-            wFs = $wFs
         """.trimIndent()
     }
 

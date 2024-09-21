@@ -20,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -49,7 +50,7 @@ sealed class ViewState {
 
     data object Connecting : ViewState()
 
-    data object Connected : ViewState()
+    data class Connected(val txt: String) : ViewState()
 
     data object Disconnecting : ViewState()
 
@@ -61,7 +62,7 @@ val ViewState.label: String
     get() = when (this) {
         ViewState.BluetoothUnavailable -> "蓝牙不可用"
         ViewState.Connecting -> "连接中"
-        is ViewState.Connected -> "已连接"
+        is ViewState.Connected -> "已连接 $txt"
         ViewState.Disconnecting -> "断开连接"
         ViewState.Disconnected -> "连接断开"
     }
@@ -101,9 +102,6 @@ class SensorViewModel(application: Application, mac: String) : AndroidViewModel(
             try {
                 peripheral.connect()
                 (peripheral as AndroidPeripheral).requestMtu(247)
-                getRtWave().collectLatest {
-                    LogUtil.e("getRtWave $it")
-                }
                 autoConnect.value = true
             } catch (e: Exception) {
                 autoConnect.value = false
@@ -113,57 +111,55 @@ class SensorViewModel(application: Application, mac: String) : AndroidViewModel(
     }
 
 
-    private var startTime: TimeMark? = null
-
-
-    var preBytes = byteArrayOf()
-
     @OptIn(ExperimentalCoroutinesApi::class)
-    val viewState: Flow<ViewState> = state
+    var viewState: Flow<ViewState> = state
         .flatMapLatest { (bluetoothAvailability, state) ->
             if (bluetoothAvailability is Unavailable) {
                 return@flatMapLatest flowOf(ViewState.BluetoothUnavailable)
             }
             when (state) {
                 is State.Connecting -> flowOf(ViewState.Connecting)
-                State.Connected -> flowOf(ViewState.Connected)
+                State.Connected -> {
+                    getData()
+                    flowOf(ViewState.Connected(""))
+                }
+
                 State.Disconnecting -> flowOf(ViewState.Disconnecting)
                 is State.Disconnected -> flowOf(ViewState.Disconnected)
             }
         }
 
-    private var temp = byteArrayOf()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val data = bleDevice.notify
-        .filter {
-            if ((it[0].toInt() and 0xff == 0x55) && it[1].toInt() == 0x00) {
-                val len = it[5].toInt() and 0xff
-                if (len > 20) {
-                    temp += it
-                }
-                false
-            } else {
-                if (temp.isNotEmpty()) {
-                    temp += it
-                    true
-                } else {
-                    false
-                }
+    private fun getData() {
+        viewModelScope.launch {
+            getRtWave().collectLatest { cmd ->
+//                LogUtil.e(cmd)
+                viewState = flowOf(ViewState.Connected(cmd))
             }
         }
-        .map {
-            LogUtil.e(bytesToHexString(temp))
-            preBytes = temp.copyOfRange(7, temp.size-1)
-            temp = byteArrayOf()
-            RtWave(preBytes).wFs
-        }.flatMapConcat {
-            it.asFlow()
+        viewModelScope.launch {
+            bleDevice.notify.collectLatest { data ->
+//                LogUtil.e("notify: ${bytesToHexString(data)}")
+                _wave.value = data.copyOfRange(7, data.size - 1)
+            }
         }
+    }
+
+
+    private val _wave = MutableStateFlow(byteArrayOf())
+
+    val wave: Flow<ByteArray> = _wave
+
+    private var startTime: TimeMark? = null
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val data = _wave
+        .map { RtWave(it).wFs }
+        .flatMapConcat { it.asFlow() }
         .onStart { startTime = TimeSource.Monotonic.markNow() }
         .scan(emptyList<Sample>()) { accumulator, value ->
-            val t = startTime!!.elapsedNow().inWholeMilliseconds / 5000f
-            accumulator.takeLast(200) + Sample(t, value.toFloat())
+            val t = startTime!!.elapsedNow().inWholeMilliseconds / 1000.0
+            accumulator.takeLast(500) + Sample(t, value.toFloat())
         }
         .filter { it.size > 3 }
         .catch {
@@ -173,7 +169,6 @@ class SensorViewModel(application: Application, mac: String) : AndroidViewModel(
 
     private fun getRtWave(): Flow<String> = flow {
         while (true) {
-//            LogUtil.e("获取波形")
             val byteArray = byteArrayOf(
                 0xAA.toByte(),
                 0x1B,

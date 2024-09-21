@@ -24,13 +24,13 @@ import com.juul.krayon.selection.join
 import com.juul.krayon.selection.selectAll
 import com.juul.krayon.shape.line
 
-data class Sample(val t: Float, val x: Float)
+data class Sample(val t: Double, val x: Float)
 
 private val xLinePaint = Paint.Stroke(steelBlue, 1f)
 
 internal fun chart(root: RootElement, width: Float, height: Float, data: List<Sample>) {
     try {
-        val leftMargin = 60f
+        val leftMargin = 40f
         val topMargin = 20f
         val rightMargin = 20f
         val bottomMargin = 40f

@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -67,16 +66,16 @@ class SensorActivity : ComponentActivity() {
                             Spacer(Modifier.size(10.dp))
                             Text("接收:", fontSize = 18.sp)
                             Spacer(Modifier.size(10.dp))
-                            Text(bytesToHexString(viewModel.preBytes), fontSize = 18.sp)
+                            val wave = viewModel.wave.collectAsState(byteArrayOf()).value
+                            Text(bytesToHexString(wave), fontSize = 18.sp)
                             Spacer(Modifier.size(10.dp))
-                            if (viewModel.preBytes.isNotEmpty()) {
-                                val rtWave = RtWave(viewModel.preBytes)
-                                Text(rtWave.toString(), fontSize = 18.sp)
+                            if (wave.isNotEmpty()) {
+                                Text(RtWave(wave).toString(), fontSize = 18.sp)
                                 Spacer(Modifier.size(20.dp))
                             }
 
                             AndroidView(
-                                modifier = Modifier.weight(1f).clickable(enabled = false) {  },
+                                modifier = Modifier.weight(1f),
                                 factory = { context ->
                                     ElementView(context).apply {
                                         adapter = ElementViewAdapter(
