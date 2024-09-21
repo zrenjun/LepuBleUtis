@@ -1,3 +1,7 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -19,6 +23,20 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val dateFormat = SimpleDateFormat("yyyyMMddHHmm")
+        dateFormat.timeZone = TimeZone.getTimeZone("Asia/Shanghai")
+        val date = dateFormat.format(Date())
+        setProperty("archivesBaseName", "O2M_v${versionName}(${versionCode})_${date}")
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = File("F:\\LepuBleUtis\\app\\key.jks")
+            storePassword = "123456"
+            keyAlias = "key0"
+            keyPassword = "123456"
+        }
     }
 
     buildTypes {
@@ -28,6 +46,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
