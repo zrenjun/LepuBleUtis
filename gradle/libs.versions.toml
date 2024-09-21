@@ -1,13 +1,22 @@
 [versions]
-agp = "8.5.2"
-kotlin = "1.9.0"
+agp = "8.6.1"
+kotlin = "2.0.20"
 coreKtx = "1.13.1"
-lifecycleRuntimeKtx = "2.8.5"
+lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.2"
-composeBom = "2024.09.01"
+composeBom = "2024.09.02"
 bluetooth = "1.0.0-alpha02"
+accompanist = "0.36.0"
+krayon = "0.18.0"
+exercise = "0.12.0"
+ksp = "2.0.20-1.0.25"
+stream = "1.1.4"
+
+
+
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -18,7 +27,30 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-bluetooth = { group = "androidx.bluetooth", name = "bluetooth", version.ref = "bluetooth" }
 
+exercise-annotations = { module = "com.juul.exercise:annotations", version.ref = "exercise" }
+exercise-compile = { module = "com.juul.exercise:compile", version.ref = "exercise" }
+kable = { module = "com.juul.kable:kable-core", version = "0.34.0" }
+khronicle = { module = "com.juul.khronicle:khronicle-core", version = "0.3.0" }
+krayon-axis = { module = "com.juul.krayon:axis", version.ref = "krayon" }
+krayon-scale = { module = "com.juul.krayon:scale", version.ref = "krayon" }
+krayon-selection = { module = "com.juul.krayon:selection", version.ref = "krayon" }
+krayon-shape = { module = "com.juul.krayon:shape", version.ref = "krayon" }
+krayon-view = { module = "com.juul.krayon:element-view", version.ref = "krayon" }
+
+stream = { group = "io.getstream", name = "stream-log-android", version.ref = "stream" }
+stream-file = { group = "io.getstream", name = "stream-log-android-file", version.ref = "stream" }
+
+[bundles]
+krayon = [
+    "krayon-axis",
+    "krayon-scale",
+    "krayon-selection",
+    "krayon-shape",
+    "krayon-view",
+]
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

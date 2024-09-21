@@ -1,0 +1,115 @@
+package com.lepu.ble.utils;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
+public class DateUtil {
+
+    public static final String DATE_ALL_ALL = "yyyy-MM-dd H:mm:ss";
+    public static final String YEAR_MONTH_DAY = "yyyy-MM-dd";
+    public static final String YEAR_MONTH = "yyyy-MM";
+    public static final String DATE_ALL = "yyyy-MM-dd H:mm";
+    public static final String DATE_ALL_12 = "yyyy-MM-dd h:mm";
+    public static final String DATE_TIME = "MM-dd H:mm";
+    public static final String DATE_HOUR_MINUTE = "H:mm";
+    public static final String DATE_HOUR_MINUTE_12 = "h:mm";
+    public static final String DATE_HOUR_MINUTE_SEC = "H:mm:ss";
+    public static final String DATE_HOUR_MINUTE_SEC_12 = "h:mm:ss";
+    public static final long WEEK_MILLIS = 604800000L;
+    public static final long MONTH_MILLIS = 2592000000L;
+    public static final long DAY_MILLIS = 86400000L;
+    public static String mCurrentDateFormat;
+    private static final long timeZone = TimeZone.getDefault().getRawOffset();
+    private final static ThreadLocal<SimpleDateFormat> dateFormater2 = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd");
+        }
+    };
+
+
+    public enum FormatType {
+        yyyy, yyyyMM, yyyyMMdd, yyyyMMddHHmm, yyyyMMddHHmmss, MMdd, HHmm,MM,dd,MMddHHmm,ddMMyyyy,HHmmss;
+    }
+
+    public static long getDayTimestamp(){
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return (cal.getTimeInMillis()/1000);
+    }
+
+    public static String getFileName() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+        String date = format.format(new Date(System.currentTimeMillis()));
+        return date;// 2012年10月03日 23:41:31
+    }
+
+    public static String getDateEN() {
+        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String date1 = format1.format(new Date(System.currentTimeMillis()));
+        return date1;// 2012-10-03 23:41:31
+    }
+
+    /**
+     * 获取精确到秒的时间戳
+     * @param date
+     * @return
+     */
+    public static int getSecondTimestamp(Date date){
+        if (null == date) {
+            return 0;
+        }
+        String timestamp = String.valueOf(date.getTime()/1000);
+        return Integer.valueOf(timestamp);
+    }
+
+    /**
+     * 时间戳转字符串
+     */
+    public static String stringFromDate(Date date, String formatString) {
+        DateFormat df = new SimpleDateFormat(formatString);
+        return df.format(date);
+    }
+
+    /**
+     * 获取精确秒的时间戳
+     */
+    public static long getSecondTimestamp(String time){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        try {
+            return sdf.parse(time).getTime()/1000;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    /**
+     * 获取时区
+     */
+    public static int getTimeZoneOffset() {
+        return TimeZone.getDefault().getOffset(System.currentTimeMillis());
+    }
+
+    /**
+     * 短时间内接收多次数据
+     */
+    private static long laskClickTime = 0;
+    private static long DIFF = 1000;
+
+    public static boolean isReceiveDouble() {
+        long time = System.currentTimeMillis();
+        long temp = time - laskClickTime;
+        if (laskClickTime > 0 && temp < DIFF) {
+            return true;
+        }
+        laskClickTime = time;
+        return false;
+    }
+}
